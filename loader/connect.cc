@@ -34,22 +34,35 @@ std::optional<std::string> load_shunter(const options::config& cfg) {
 
     skel->rodata->include_vlan = cfg.include_vlan;
 
-    shunter::load(skel);
-    auto prog_fd = bpf_program__fd(skel->progs.xdp_shunt);
-    if ( prog_fd < 0 )
-        return "Could not find BPF program";
 
-    auto err = bpf_xdp_attach(cfg.ifindex, prog_fd, flags(cfg), nullptr);
+    auto sec_name = bpf_program__section_name(skel->progs.xdp_shunt);
+    if ( ! sec_name ) {
+        shunter::destroy(skel);
+        return "Could not determine ELF section name for shunter";
+    }
+
+    auto *prog = xdp_program__from_bpf_obj(skel->obj, sec_name);
+    if ( ! prog ) {
+        shunter::destroy(skel);
+        return "Failed to parse BPF object via libxdp";
+    }
+
+    int err = xdp_program__attach(prog, cfg.ifindex, cfg.attach_mode, 0);
     if ( err ) {
-        char err_buf[256];
-        libbpf_strerror(err, err_buf, sizeof(err_buf));
-        return std::string(err_buf);
+        std::string err_msg = "Libxdp attach failed: ";
+        // libxdp uses negative on fail
+        err_msg += (err < 0) ? std::generic_category().message(-err) : std::to_string(err);
+        shunter::destroy(skel);
+        return err_msg;
     }
 
     return {};
 }
 
 std::optional<std::string> load(const options::config& cfg) {
+    if ( cfg.force )
+        unload_all(cfg);
+
     if ( cfg.load_shunter ) {
         if ( auto err = load_shunter(cfg) )
             return err;
@@ -61,7 +74,7 @@ std::optional<std::string> load(const options::config& cfg) {
 void unload_all(const options::config& cfg) {
     bpf_xdp_detach(cfg.ifindex, flags(cfg), nullptr);
 
-    if ( cfg.unpin_maps && std::filesystem::exists(cfg.pin_path) )
+    if ( (cfg.unpin_maps || cfg.force) && std::filesystem::exists(cfg.pin_path) )
         std::filesystem::remove_all(cfg.pin_path);
 }
-}
+} // namespace zeek::xdp

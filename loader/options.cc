@@ -22,6 +22,7 @@ bool parse_cmd_load(int argc, char** argv, options::config* cfg) {
         {"skb-mode", no_argument, nullptr, 'S'},
         {"native-mode", no_argument, nullptr, 'N'},
         {"auto-mode", no_argument, nullptr, 'A'},
+        {"force", no_argument, nullptr, 'F'},
         {"filename", required_argument, nullptr, 1},
         {"progname", required_argument, nullptr, 2},
         {"offload-mode", no_argument, nullptr, 3},
@@ -32,7 +33,7 @@ bool parse_cmd_load(int argc, char** argv, options::config* cfg) {
         {0, 0, nullptr, 0},
     };
 
-    const char* optstring = "hd:p:vSNA:";
+    const char* optstring = "hd:p:vSNA:F";
 
     int opt;
     int longindex = 0;
@@ -42,11 +43,6 @@ bool parse_cmd_load(int argc, char** argv, options::config* cfg) {
         switch ( opt ) {
             case 'd': {
                 std::string_view optarg_view(optarg);
-                if ( optarg_view.length() >= IF_NAMESIZE ) {
-                    fprintf(stderr, "ERR: --dev name too long\n");
-                    return false;
-                }
-
                 cfg->ifname = optarg_view;
                 cfg->ifindex = if_nametoindex(cfg->ifname.c_str());
 
@@ -63,6 +59,7 @@ bool parse_cmd_load(int argc, char** argv, options::config* cfg) {
             case 'A': cfg->attach_mode = XDP_MODE_UNSPEC; break;
             case 'S': cfg->attach_mode = XDP_MODE_SKB; break;
             case 'N': cfg->attach_mode = XDP_MODE_NATIVE; break;
+            case 'F': cfg->force = true; break;
             case 3: cfg->attach_mode = XDP_MODE_HW; break;
             case 1:
                 // TODO: handle --filename
@@ -131,11 +128,6 @@ bool parse_cmd_unload(int argc, char** argv, options::config* cfg) {
         switch ( opt ) {
             case 'd': {
                 std::string_view optarg_view(optarg);
-                if ( optarg_view.length() >= IF_NAMESIZE ) {
-                    fprintf(stderr, "ERR: --dev name too long\n");
-                    return false;
-                }
-
                 cfg->ifname = optarg_view;
                 cfg->ifindex = if_nametoindex(cfg->ifname.c_str());
 

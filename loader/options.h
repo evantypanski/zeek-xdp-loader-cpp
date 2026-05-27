@@ -4,9 +4,6 @@
 #include <string>
 #include <xdp/libxdp.h>
 
-// TODO: D:
-#define IF_NAMESIZE	16
-
 namespace options {
 
 enum class Command {
@@ -22,10 +19,11 @@ struct config {
   int ifindex = -1;
   std::string ifname = "";
   std::string pin_path = "/sys/fs/bpf/zeek";
-  bool include_vlan = false;
 
   // Load
+  bool force = false;
   bool load_shunter = false;
+  bool include_vlan = false;
   uint32_t conn_id_map_max_size = 65535;
   uint32_t ip_pair_map_max_size = 65535;
 
