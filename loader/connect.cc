@@ -1,23 +1,12 @@
 #include "connect.h"
 
 #include <unistd.h>
+#include <linux/if_link.h>
 #include <filesystem>
 
 #include "shunter.skel.h"
 
 namespace zeek::xdp {
-uint32_t flags(const options::config& cfg) {
-    uint32_t flags = 0;
-    switch ( cfg.attach_mode ) {
-        case XDP_MODE_UNSPEC: break;
-        case XDP_MODE_NATIVE: flags |= (1U << 2); break;
-        case XDP_MODE_SKB: flags |= (1U << 1); break;
-        case XDP_MODE_HW: flags |= (1U << 3); break;
-    }
-
-    return flags;
-}
-
 struct bpf_map* get_canonical_id_map(struct shunter* skel) { return skel->maps.shunt_map; }
 struct bpf_map* get_ip_pair_map(struct shunter* skel) { return skel->maps.ip_pair_map; }
 
@@ -72,9 +61,10 @@ std::optional<std::string> load(const options::config& cfg) {
 }
 
 void unload_all(const options::config& cfg) {
-    bpf_xdp_detach(cfg.ifindex, flags(cfg), nullptr);
+    bpf_xdp_detach(cfg.ifindex, XDP_FLAGS_DRV_MODE, nullptr);
+    bpf_xdp_detach(cfg.ifindex, XDP_FLAGS_SKB_MODE, nullptr);
 
-    if ( (cfg.unpin_maps || cfg.force) && std::filesystem::exists(cfg.pin_path) )
+    if ( cfg.force && std::filesystem::exists(cfg.pin_path) )
         std::filesystem::remove_all(cfg.pin_path);
 }
 } // namespace zeek::xdp

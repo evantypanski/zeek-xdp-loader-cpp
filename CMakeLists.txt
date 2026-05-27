@@ -1,10 +1,20 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(ZeekXDPLoader C CXX)
+project(xdp_loader C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+
+FetchContent_Declare(
+    cli11
+    GIT_REPOSITORY https://github.com/cliutils/cli11
+    GIT_TAG v2.6.2
+)
+
+FetchContent_MakeAvailable(cli11)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBXDP REQUIRED IMPORTED_TARGET libxdp)
@@ -82,6 +92,7 @@ target_include_directories(xdp_loader PRIVATE
 )
 
 target_link_libraries(xdp_loader PRIVATE
+    CLI11::CLI11
     PkgConfig::LIBXDP
     PkgConfig::LIBBPF
 )
