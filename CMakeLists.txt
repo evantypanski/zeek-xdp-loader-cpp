@@ -84,7 +84,7 @@ add_custom_target(bpf_build ALL
     DEPENDS ${BPF_SKELETON}
 )
 
-add_executable(xdp_loader loader/main.cc loader/connect.cc loader/options.cc)
+add_executable(xdp_loader loader/main.cc loader/connect.cc loader/options.cc loader/shunt.cc)
 add_dependencies(xdp_loader bpf_build)
 target_include_directories(xdp_loader PRIVATE
     ${BPF_OUTPUT_DIR}

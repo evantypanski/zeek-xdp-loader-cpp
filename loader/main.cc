@@ -1,5 +1,6 @@
 #include "connect.h"
 #include "options.h"
+#include "shunt.h"
 
 int main(int argc, char** argv) {
     options::config cfg;
@@ -7,6 +8,7 @@ int main(int argc, char** argv) {
     switch ( cfg.cmd ) {
         case options::Command::Load: zeek::xdp::load(cfg); break;
         case options::Command::Unload: zeek::xdp::unload_all(cfg); break;
+        case options::Command::ShuntStatus: zeek::xdp::shunt::status(cfg); break;
         case options::Command::None: exit(1); // already errored
     }
 

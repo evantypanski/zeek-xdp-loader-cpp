@@ -8,7 +8,7 @@
 
 namespace options {
 
-enum class Command { None, Load, Unload };
+enum class Command { None, Load, Unload, ShuntStatus };
 
 static const std::map<std::string, enum xdp_attach_mode> mode_map{{"auto", XDP_MODE_UNSPEC},
                                                                   {"native", XDP_MODE_NATIVE},

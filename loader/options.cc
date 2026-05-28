@@ -2,7 +2,6 @@
 
 #include <net/if.h>
 #include <CLI/CLI.hpp>
-#include <charconv>
 #include <iostream>
 #include <system_error>
 
@@ -38,6 +37,11 @@ void add_unload_cmd(CLI::App* app, options::config* cfg) {
     unload_cmd->add_flag("-F,--force", cfg->force, "force complete unloading (including maps)");
 }
 
+void add_shunt_status_cmd(CLI::App* app, options::config* cfg) {
+    auto* status_cmd = app->add_subcommand("shunt-status", "print the current shunter status");
+    status_cmd->add_option("-d,--dev", cfg->ifname, "network interface device to check if shunter is loaded");
+}
+
 bool parse_cmdline(int argc, char** argv, options::config* cfg) {
     CLI::App app{"Zeek XDP loader"};
 
@@ -45,6 +49,7 @@ bool parse_cmdline(int argc, char** argv, options::config* cfg) {
 
     add_load_cmd(&app, cfg);
     add_unload_cmd(&app, cfg);
+    add_shunt_status_cmd(&app, cfg);
 
     try {
         app.parse(argc, argv);
@@ -67,8 +72,10 @@ bool parse_cmdline(int argc, char** argv, options::config* cfg) {
     // Set command state
     if ( app.got_subcommand("load") )
         cfg->cmd = options::Command::Load;
-    if ( app.got_subcommand("unload") )
+    else if ( app.got_subcommand("unload") )
         cfg->cmd = options::Command::Unload;
+    else if ( app.got_subcommand("shunt-status") )
+        cfg->cmd = options::Command::ShuntStatus;
 
     return true;
 }
